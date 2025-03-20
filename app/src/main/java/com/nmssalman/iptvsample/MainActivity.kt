@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.widget.addTextChangedListener
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ui.PlayerView
@@ -36,8 +38,9 @@ class MainActivity : ComponentActivity() {
     private var player: ExoPlayer? = null
     private lateinit var playerView: PlayerView
     private lateinit var channelListView: ListView
+    private lateinit var search: EditText
     private val channels = mutableListOf<Pair<String, String>>() // (Channel Name, M3U8 URL)
-
+    private val channels_search = mutableListOf<Pair<String, String>>() // (Channel Name, M3U8 URL)
     private val iptvPlaylistUrl = "https://iptv-org.github.io/iptv/index.category.m3u"
 
 
@@ -47,6 +50,7 @@ class MainActivity : ComponentActivity() {
 
         playerView = findViewById(R.id.videoView)
         channelListView = findViewById(R.id.channelListView)
+        search = findViewById(R.id.search)
 
         // Load IPTV playlist
         loadM3UPlaylist()
@@ -55,7 +59,24 @@ class MainActivity : ComponentActivity() {
             val selectedChannel = channels[position]
             playChannel(selectedChannel.second)
         }
+        search()
+    }
 
+    private fun search() {
+
+        search.addTextChangedListener {
+            if(search.text.isEmpty())
+            {
+                val adapter = ChannelAdapter(this, channels)
+                channelListView.adapter = adapter
+            }
+            else
+            {
+                val filter = channels.filter { it.first.toLowerCase().contains(search.text.toString().toLowerCase()) }
+                val adapter = ChannelAdapter(this, filter)
+                channelListView.adapter = adapter
+            }
+        }
     }
 
     private fun loadM3UPlaylist() {
